@@ -2,11 +2,18 @@ def calculeazaFitness(a, b, c, value):
     return a * value ** 2 + b * value + c
 
 # return lista de fitness-uri
-def getListaFitnessIndividual(a, b, c):
+def getListaFitnessIndividualLocal(a, b, c):
     f = [] # fitnesul individual -> f[xi] = f(xi)
     for i in range(0, n):
         # pe f[i] adaug fitnesul
         f.append(a * cromozomi[i] ** 2 + b * cromozomi[i] + c)
+    return f
+
+def getListaFitnessIndividualServiciu(a, b, c, indivizi, nrCromozomi):
+    f = [] # fitnesul individual -> f[xi] = f(xi)
+    for i in range(0, nrCromozomi):
+        # pe f[i] adaug fitnesul
+        f.append(a * indivizi[i].value ** 2 + b * indivizi[i].value + c)
     return f
 
 def findFitnessTotal(f):
@@ -15,14 +22,14 @@ def findFitnessTotal(f):
 
 # calcul intervale de selectie:
 # [p0, p1), [p1, p2), ...
-# returneaza lista: pe prima pozitie e lista de prob pe a doua lista de cumularea probabilitatilor
-def detProbAndCumulate(fitnessIndividual, fitnessTotal):
+# returneaza lista: pe prima pozitie [0] e lista de prob pe a doua [1] lista de cumularea probabilitatilor
+def detProbAndCumulate(fitnessIndividual, fitnessTotal, nrCromozomi):
     p = [] # probabilitatile fiecarui cromozom
     q = [] # probabilitatile cumulate: pi = p1 + p2 + p3 + ... pi
     currentSum = 0
 
-    for i in range(0, n + 1):
-        if (i == n):
+    for i in range(0, nrCromozomi + 1):
+        if (i == nrCromozomi):
             p.append(1)
         else:
             p.append(round(currentSum / fitnessTotal, 5))
@@ -49,8 +56,8 @@ if __name__ == "__main__":
     cromozomi = file.read().strip().split()
     cromozomi = [float(x) for x in cromozomi]
 
-    f = getListaFitnessIndividual(a, b, c)
-    rez = detProbAndCumulate(f, findFitnessTotal(f))
+    f = getListaFitnessIndividualLocal(a, b, c)
+    rez = detProbAndCumulate(f, findFitnessTotal(f), n)
     p = rez[0]
     q = rez[1]
 
