@@ -3,7 +3,7 @@ import codificare
 import selectie
 import incrucisare
 import mutatii
-import randomiseHelper
+import everythingHelper
 import individ as id
 
 file = open("Inputs/inputMain.in", "r")
@@ -34,7 +34,7 @@ file = open("output.out", "w")
 
 file.write("Populatie Initiala:\n")
 
-randomiseHelper.initializareCromozomi(data)
+everythingHelper.initializareCromozomi(data)
 for i in range(0, data["nrCromozomi"]):
     individ = data["listaIndivizi"][i]
     file.write(f"{i + 1}: {individ.bits}")
@@ -58,8 +58,8 @@ for i in range(0, data["nrCromozomi"]):
 file.write(f"\nIntervale Probabilitati Selectie:\n {data["intervaleSiCumulare"][0]}\n\n")
 
 for i in range(0, data["nrCromozomi"]):
-    u = randomiseHelper.makeRandomNumber()
-    cromSelectat = randomiseHelper.binarySearch(data, u)
+    u = everythingHelper.makeRandomNumber()
+    cromSelectat = everythingHelper.binarySearch(data, u)
     file.write(f"u = {u} -> selectam cromozomul {cromSelectat}\n")
 
 cromDeIncrucisat = []
@@ -68,11 +68,16 @@ sizeIncrucisare = 0
 file.write(f"\nProbabilitatea de incrucisare: {data['probIncrucisare']}")
 for i in range(0, data["nrCromozomi"]):
     individ = data["listaIndivizi"][i]
-    u = randomiseHelper.makeRandomNumber()
+    u = everythingHelper.makeRandomNumber()
     if u < data["probIncrucisare"]: 
         cromDeIncrucisat.append(individ)
-        sizeIncrucisare += 1
+        file.write(f" < {data['probIncrucisare']} participa")
+
+everythingHelper.printCromozomi(data, file)
 
 random.shuffle(cromDeIncrucisat)
-for i in range(0, sizeIncrucisare):
-    
+for i in range(0, sizeIncrucisare - 1):
+    pctRupere = int(random.uniform(1, data["nrBiti"]))
+    incrucisare.incruciseaza(cromDeIncrucisat[i], cromDeIncrucisat[i + 1], pctRupere)
+
+everythingHelper.printCromozomi(data, file)

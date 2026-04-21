@@ -1,3 +1,5 @@
+import individ
+
 # inainte de incrucisare
 # c1 = x0 x1 x2 ... xi-1 xi xi+1 ... xl-1
 # c2 = y0 y1 y2 ... yi-1 yi yi+1 ... yl-1
@@ -8,6 +10,13 @@
 
 # returneaza o lista cu 2 cromozomi (lista de char, NU string)
 def incruciseaza(cromozom1, cromozom2, pctRupere):
+    if isinstance(cromozom1, individ.Individ):
+        cromozom1 = cromozom1.bits
+    if isinstance(cromozom2, individ.Individ):
+        cromozom2 = cromozom2.bits
+
+    l = len(cromozom1)
+
     c1Incrucisat = []
     c2Incrucisat = []
     for i in range (0, pctRupere):

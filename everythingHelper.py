@@ -43,3 +43,12 @@ def findInterval(data, u):
 
     # pt cazurile ft apropiate de 1 se ia ultimul crom.
     return data["nrCromozomi"]
+
+# tester
+def printCromozomi(data, file):
+    for i in range(0, data["nrCromozomi"]):
+        individ = data["listaIndivizi"][i]
+        file.write(f"{i + 1}: {individ.bits}")
+        file.write(f" x = {individ.value}")
+        file.write(f" f = {individ.fitness}")
+        file.write("\n")

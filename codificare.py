@@ -16,15 +16,15 @@ def codifica(x, capatStanga, pasDiscretizare, nrBiti):
     while (x >= capatStanga + (intDiscretizare + 1) * pasDiscretizare): 
         intDiscretizare = intDiscretizare + 1
     
-    xBinar = ""
+    xBinar = []
     while intDiscretizare: 
-        xBinar += (str)(intDiscretizare % 2)
+        xBinar.append((str)(intDiscretizare % 2))
         intDiscretizare = intDiscretizare // 2
     xBinar = xBinar[::-1] # reverse xBinar
 
     #tb adus la lungimea l calculata mai sus
     while (len(xBinar) < nrBiti):
-        xBinar = "0" + xBinar
+        xBinar.insert(0, "0")
     return xBinar
 
 def decodifica(cromozom, capatStanga, pasDiscretizare):
