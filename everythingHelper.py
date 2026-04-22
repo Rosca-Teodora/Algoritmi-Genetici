@@ -14,7 +14,7 @@ def initializareCromozomi(data):
     for i in range (0, data["nrCromozomi"]):
         data["listaIndivizi"].append(makeIndividRandom(data))
 
-# random number in interval; helper selectie
+# random number in interval [0,1] / probabilitate; helper selectie
 def makeRandomNumber():
     return round(random.uniform(0, 1), 5)
 

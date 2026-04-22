@@ -3,5 +3,3 @@ class Individ:
         self.bits = bits
         self.value = value
         self.fitness = fitness
-
-    

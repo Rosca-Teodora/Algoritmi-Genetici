@@ -17,7 +17,7 @@ data["domeniu"] = [int(x) for x in file.readline().strip().split()] # capetele i
 data["coef"] = [float(x) for x in file.readline().strip().split()] # parametrii functiei/ coef polinomului de grad 2
 data["prec"] = int(file.readline().strip()) # precizia cu care se discretizeaza intervalul
 data["probIncrucisare"] = int(file.readline().strip()) / 100 # probabilitatea de crossover/ incrucisare
-data["probMutatie"] = int(file.readline().strip()) # prob de mutatie 
+data["probMutatie"] = int(file.readline().strip()) / 100 # prob de mutatie 
 data["nrEtape"] = int(file.readline().strip()) # nr de etape ale alg
 data["nrBiti"] = codificare.findNrBiti(data["domeniu"][0], data["domeniu"][1], data["prec"]) # aflare l dupa formula facuta la lab pastrata in helper function
 data["listaIndivizi"] = [] # lista initial nula populata la initializarea populatiei
@@ -64,9 +64,8 @@ for i in range(0, data["nrCromozomi"] - 1):
     file.write(f"u = {u} -> selectam cromozomul {cromSelectat}\n")
     cromSelectati.append(data["listaIndivizi"][cromSelectat - 1]) # cromSelectat - 1 deoarece sunt indexati de la zero in lista de indivizi, nu de la 1
 
-# calcul si adaugare elita
+# calcul elita ce va trece direct in generatia urmatoare
 posElita = everythingHelper.findPosEliteCromozome(data)
-cromSelectati.append(data["listaIndivizi"][posElita - 1])
 
 print(len(cromSelectati))
 
@@ -75,7 +74,7 @@ print(len(cromSelectati))
 cromDeIncrucisat = []
 
 file.write(f"\nProbabilitatea de incrucisare: {data['probIncrucisare']}\n")
-for i in range(0, data["nrCromozomi"]):
+for i in range(0, len(cromDeIncrucisat)):
     individ = cromSelectati[i]
     u = everythingHelper.makeRandomNumber()
     file.write(f"{i}: {''.join(individ.bits)} u = {u}")
@@ -110,5 +109,31 @@ while i <  len(cromDeIncrucisat) - 1:
 
     i = i + 2
 
-file.write('\n')
+file.write('\nDupa Recombinare:\n')
 everythingHelper.printCromozomi(cromSelectati, file)
+
+
+# MUTATII 
+# pastrez intr-un dictionar ca sa nu printez indexul de mai multe ori: 
+# perechi de tipul: (cheie = index initial : cromozom.bits)
+dictCromCuMutatii = {}
+
+file.write(f'\nProbabilitatea de mutatie pentru fiecare gena: {data['probMutatie']}\n')
+file.write('Au fost modificati cromozomii:\n')
+for i in range(0, len(cromSelectati)):
+    cromozom = cromSelectati[i].bits
+
+    for i in range(0, data['nrBiti']): 
+        u = everythingHelper.makeRandomNumber()
+        if u <= data["probMutatie"]:
+            if i not in dictCromCuMutatii: 
+                file.write(f'{i + 1}\n')
+
+            cromozom[i] = mutatii.mutate(cromozom[i])
+            dictCromCuMutatii[i] = cromozom
+
+# salvarea mutatiilor in lista de selectie             
+    
+             
+# adaugare elita direct in generatia urmatoare (fara a trece prin selectie, incrucisare sau mutatie)
+cromSelectati.append(data["listaIndivizi"][posElita - 1])
