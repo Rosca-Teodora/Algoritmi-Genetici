@@ -11,25 +11,21 @@ file = open("Inputs/inputMain.in", "r")
 # dictionar in care se pastreaza tot pt a putea trimite datele catre functii helper
 data = {}
 
-# citire data
+# CITIRE & INITIALIZARE DATE
 data["nrCromozomi"] = int(file.readline().strip()) # dimensiunea populatiei
 data["domeniu"] = [int(x) for x in file.readline().strip().split()] # capetele intervalului inchis
 data["coef"] = [float(x) for x in file.readline().strip().split()] # parametrii functiei/ coef polinomului de grad 2
 data["prec"] = int(file.readline().strip()) # precizia cu care se discretizeaza intervalul
-data["probIncrucisare"] = int(file.readline().strip()) # probabilitatea de crossover/ incrucisare
+data["probIncrucisare"] = int(file.readline().strip()) / 100 # probabilitatea de crossover/ incrucisare
 data["probMutatie"] = int(file.readline().strip()) # prob de mutatie 
 data["nrEtape"] = int(file.readline().strip()) # nr de etape ale alg
+data["nrBiti"] = codificare.findNrBiti(data["domeniu"][0], data["domeniu"][1], data["prec"]) # aflare l dupa formula facuta la lab pastrata in helper function
+data["listaIndivizi"] = [] # lista initial nula populata la initializarea populatiei
 
-print(data["domeniu"])
+file.close() # inchide file read
+file = open("output.out", "w") # deschide file write
 
-file.close()
-
-# aflare l dupa formula facuta la lab pastrata in helper function
-data["nrBiti"] = codificare.findNrBiti(data["domeniu"][0], data["domeniu"][1], data["prec"])
-data["listaIndivizi"] = []
-
-file = open("output.out", "w")
-
+# INITIALIZAREA PUPULATIEI
 # genereaza cromozomii initiali prin nr aleatoare in intervalul si cu precizia ceruta
 
 file.write("Populatie Initiala:\n")
@@ -37,11 +33,13 @@ file.write("Populatie Initiala:\n")
 everythingHelper.initializareCromozomi(data)
 for i in range(0, data["nrCromozomi"]):
     individ = data["listaIndivizi"][i]
-    file.write(f"{i + 1}: {individ.bits}")
+    file.write(f"{i + 1}: {''.join(individ.bits)}")
     file.write(f" x = {individ.value}")
     file.write(f" f = {individ.fitness}")
     file.write("\n")
 
+# SELECTIE
+# start prin a updata data a.i. sa apara fitnesul si intervalele de selectie
 a = data["coef"][0]
 b = data["coef"][1]
 c = data["coef"][2]
@@ -57,27 +55,60 @@ for i in range(0, data["nrCromozomi"]):
 
 file.write(f"\nIntervale Probabilitati Selectie:\n {data["intervaleSiCumulare"][0]}\n\n")
 
-for i in range(0, data["nrCromozomi"]):
+cromSelectati = []
+
+# selectez doar 19 indivizi din cei pastrati pentru a putea pastra elita
+for i in range(0, data["nrCromozomi"] - 1): 
     u = everythingHelper.makeRandomNumber()
-    cromSelectat = everythingHelper.binarySearch(data, u)
+    cromSelectat = everythingHelper.binarySearch(data, u) # cromSelectat = INDICELE cromozomului selectat 
     file.write(f"u = {u} -> selectam cromozomul {cromSelectat}\n")
+    cromSelectati.append(data["listaIndivizi"][cromSelectat - 1]) # cromSelectat - 1 deoarece sunt indexati de la zero in lista de indivizi, nu de la 1
+
+# calcul si adaugare elita
+posElita = everythingHelper.findPosEliteCromozome(data)
+cromSelectati.append(data["listaIndivizi"][posElita - 1])
+
+print(len(cromSelectati))
+
+# INCRUCISAREA cromozomilor tocmai selectati
 
 cromDeIncrucisat = []
-sizeIncrucisare = 0
 
-file.write(f"\nProbabilitatea de incrucisare: {data['probIncrucisare']}")
+file.write(f"\nProbabilitatea de incrucisare: {data['probIncrucisare']}\n")
 for i in range(0, data["nrCromozomi"]):
-    individ = data["listaIndivizi"][i]
+    individ = cromSelectati[i]
     u = everythingHelper.makeRandomNumber()
+    file.write(f"{i}: {''.join(individ.bits)} u = {u}")
     if u < data["probIncrucisare"]: 
-        cromDeIncrucisat.append(individ)
+        cromDeIncrucisat.append([individ, i]) # pastrez bitii individului si pozitia lui initiala
         file.write(f" < {data['probIncrucisare']} participa")
+    file.write(f"\n")
 
-everythingHelper.printCromozomi(data, file)
+# debug print 
+#everythingHelper.printCromozomi(data, file)
 
-random.shuffle(cromDeIncrucisat)
-for i in range(0, sizeIncrucisare - 1):
-    pctRupere = int(random.uniform(1, data["nrBiti"]))
-    incrucisare.incruciseaza(cromDeIncrucisat[i], cromDeIncrucisat[i + 1], pctRupere)
+i = 0
+while i <  len(cromDeIncrucisat) - 1:
+    pctRupere = int(random.uniform(1, data["nrBiti"] - 1))
 
-everythingHelper.printCromozomi(data, file)
+    crom1 = cromDeIncrucisat[i][0]
+    crom2 = cromDeIncrucisat[i + 1][0]
+    pozitie1 = cromDeIncrucisat[i][1]
+    pozitie2 = cromDeIncrucisat[i + 1][1]
+    
+    file.write(f'Recombinarea dintre cromozomul {pozitie1 + 2} si {pozitie2 + 1}\n')
+    file.write(f'{''.join(crom1.bits)} {''.join(crom2.bits)} punct {pctRupere}\n')
+
+    rez = incrucisare.incruciseaza(crom1, crom2, pctRupere)
+    crom1.bits = rez[0]
+    crom2.bits = rez[1]
+    file.write(f'Rezultat: {''.join(crom1.bits)} {''.join(crom2.bits)}\n')
+
+    # tb salvate schimbarile in cromSelectati
+    cromSelectati[pozitie1] = crom1
+    cromSelectati[pozitie2] = crom2
+
+    i = i + 2
+
+file.write('\n')
+everythingHelper.printCromozomi(cromSelectati, file)

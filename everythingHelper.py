@@ -14,10 +14,11 @@ def initializareCromozomi(data):
     for i in range (0, data["nrCromozomi"]):
         data["listaIndivizi"].append(makeIndividRandom(data))
 
-# random number in interval; hlper selectie
+# random number in interval; helper selectie
 def makeRandomNumber():
     return round(random.uniform(0, 1), 5)
 
+# cautarea binara pentru pozitia cromozromului in intervalele de selectie
 def binarySearch(data, u):
     intervale = data["intervaleSiCumulare"][0]
     left = 0
@@ -34,6 +35,7 @@ def binarySearch(data, u):
 
     return min(left + 1, data["nrCromozomi"])
 
+# functie initiala de test
 def findInterval(data, u):
     intervale = data["intervaleSiCumulare"][0]
 
@@ -44,11 +46,26 @@ def findInterval(data, u):
     # pt cazurile ft apropiate de 1 se ia ultimul crom.
     return data["nrCromozomi"]
 
-# tester
-def printCromozomi(data, file):
-    for i in range(0, data["nrCromozomi"]):
-        individ = data["listaIndivizi"][i]
-        file.write(f"{i + 1}: {individ.bits}")
+# debug print
+def printCromozomi(cromozomi, file):
+    for i in range(0, len(cromozomi)):
+        individ = cromozomi[i]
+        file.write(f"{i + 1}: {''.join(individ.bits)}")
         file.write(f" x = {individ.value}")
         file.write(f" f = {individ.fitness}")
         file.write("\n")
+
+# helpere selectare elita
+def findFitnessMaxim(data):
+    fMax = 0
+    for individ in data["listaIndivizi"]:
+        if individ.fitness > fMax:
+            fMax = individ.fitness
+    return fMax
+
+def findPosEliteCromozome(data):
+    fMax = findFitnessMaxim(data)
+    for i in range(0, data['nrCromozomi']):
+        if data['listaIndivizi'][i].fitness == fMax:
+            return i 
+    return -1
