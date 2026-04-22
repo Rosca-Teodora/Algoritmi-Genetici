@@ -171,16 +171,16 @@ for etapa in range(1, data["nrEtape"]):
         cromSelectat = everythingHelper.binarySearch(data, u)
         cromSelectati.append(data["listaIndivizi"][cromSelectat - 1])
     
-    # Salveaza elita pentru a o adauga doar la sfarsit
+    # save elite pt a fi adaugata la sfarsit
     elita = data["listaIndivizi"][posElita - 1]
     
-    # Aplica operatiile genetice (incrucisare si mutatie)
+    # aplica crossover si mutatie 
     cromSelectati = everythingHelper.aplicaOperatiiGenetice(cromSelectati, data)
     
-    # Adaugare elita la sfarsit (dupa toate operatiile genetice)
+    # adaugare elita la sfarsit
     cromSelectati.append(elita)
     
-    # Afisare fitness maxim si mediu
+    # fitness maxim si mediu
     max_fitness = max([individ.fitness for individ in cromSelectati])
     avg_fitness = sum([individ.fitness for individ in cromSelectati]) / len(cromSelectati)
     file.write(f"{max_fitness}\n")
