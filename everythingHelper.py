@@ -1,7 +1,9 @@
 import random
 import individ as ind
 import codificare
+import mutatii
 import selectie
+import incrucisare
 
 def makeIndividRandom(data):
     value = random.uniform(data['domeniu'][0], data['domeniu'][1])
@@ -69,3 +71,50 @@ def findPosEliteCromozome(data):
         if data['listaIndivizi'][i].fitness == fMax:
             return i 
     return -1
+
+
+# fct helper pt CROSSOVER si MUTATIE
+def aplicaOperatiiGenetice(cromSelectati, data):
+    # avand cromozomii deja selectati si datele predefinite se face crossover-ul si mutatia 
+    # INCRUCISAREA
+    cromDeIncrucisat = []
+    
+    for i in range(0, len(cromSelectati)):
+        individ = cromSelectati[i]
+        u = makeRandomNumber()
+        if u < data["probIncrucisare"]:
+            cromDeIncrucisat.append([individ, i])
+    
+    i = 0
+    while i < len(cromDeIncrucisat) - 1:
+        pctRupere = int(random.uniform(1, data["nrBiti"] - 1))
+        
+        crom1 = cromDeIncrucisat[i][0]
+        crom2 = cromDeIncrucisat[i + 1][0]
+        pozitie1 = cromDeIncrucisat[i][1]
+        pozitie2 = cromDeIncrucisat[i + 1][1]
+        
+        rez = incrucisare.incruciseaza(crom1, crom2, pctRupere)
+        crom1.bits = rez[0]
+        crom2.bits = rez[1]
+        
+        crom1.update(data)
+        crom2.update(data)
+        
+        cromSelectati[pozitie1] = crom1
+        cromSelectati[pozitie2] = crom2
+        
+        i = i + 2
+    
+    # MUTATII
+    for i in range(0, len(cromSelectati)):
+        for j in range(0, data['nrBiti']):
+            u = makeRandomNumber()
+            if u <= data["probMutatie"]:
+                cromSelectati[i].bits[j] = mutatii.mutate(cromSelectati[i].bits[j])
+    
+    # recalc fitness dupa mutatii
+    for i in range(0, len(cromSelectati)):
+        cromSelectati[i].update(data)
+    
+    return cromSelectati

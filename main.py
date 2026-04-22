@@ -23,20 +23,17 @@ data["nrBiti"] = codificare.findNrBiti(data["domeniu"][0], data["domeniu"][1], d
 data["listaIndivizi"] = [] # lista initial nula populata la initializarea populatiei
 
 file.close() # inchide file read
-file = open("output.out", "w") # deschide file write
+file = open("evolutie.out", "w") # deschide file write
 
 # INITIALIZAREA PUPULATIEI
 # genereaza cromozomii initiali prin nr aleatoare in intervalul si cu precizia ceruta
 
-file.write("Populatie Initiala:\n")
+file.write("Populatia initiala\n")
 
 everythingHelper.initializareCromozomi(data)
 for i in range(0, data["nrCromozomi"]):
     individ = data["listaIndivizi"][i]
-    file.write(f"{i + 1}: {''.join(individ.bits)}")
-    file.write(f" x = {individ.value}")
-    file.write(f" f = {individ.fitness}")
-    file.write("\n")
+    file.write(f"  {i + 1:2}: {''.join(individ.bits)} x={individ.value:8.6f} f={individ.fitness}\n")
 
 # SELECTIE
 # start prin a updata data a.i. sa apara fitnesul si intervalele de selectie
@@ -47,13 +44,16 @@ data["listaFitness"] = selectie.getListaFitnessIndividualServiciu(a, b, c, data[
 data["fitnessTotal"] = selectie.findFitnessTotal(data["listaFitness"])
 data["intervaleSiCumulare"] = selectie.detProbAndCumulate(data["listaFitness"], data["fitnessTotal"], data["nrCromozomi"])
 
-file.write("\nProbabilitati de Selectie:\n")
+file.write("\nProbabilitati selectie \n")
 for i in range(0, data["nrCromozomi"]):
     individ = data["listaIndivizi"][i]
     p = float(selectie.calculeazaFitness(a, b, c, individ.value) / data["fitnessTotal"])
-    file.write(f"cromozom {i + 1} probabilitate: {p}\n")
+    file.write(f"cromozom {i + 1:3} probabilitate {p}\n")
 
-file.write(f"\nIntervale Probabilitati Selectie:\n {data["intervaleSiCumulare"][0]}\n\n")
+file.write(f"Intervale probabilitati selectie \n")
+for val in data["intervaleSiCumulare"][0]:
+    file.write(f"{val} ")
+file.write("\n")
 
 cromSelectati = []
 
@@ -61,79 +61,128 @@ cromSelectati = []
 for i in range(0, data["nrCromozomi"] - 1): 
     u = everythingHelper.makeRandomNumber()
     cromSelectat = everythingHelper.binarySearch(data, u) # cromSelectat = INDICELE cromozomului selectat 
-    file.write(f"u = {u} -> selectam cromozomul {cromSelectat}\n")
+    file.write(f"u={u}  selectam cromozomul {cromSelectat} \n")
     cromSelectati.append(data["listaIndivizi"][cromSelectat - 1]) # cromSelectat - 1 deoarece sunt indexati de la zero in lista de indivizi, nu de la 1
 
 # calcul elita ce va trece direct in generatia urmatoare
 posElita = everythingHelper.findPosEliteCromozome(data)
+elita = data["listaIndivizi"][posElita - 1]
 
-print(len(cromSelectati))
+file.write(f"\nDupa selectie:\n")
+for i in range(0, len(cromSelectati)):
+    individ = cromSelectati[i]
+    file.write(f"  {i + 1:2}: {''.join(individ.bits)} x={individ.value:8.6f} f={individ.fitness}\n")
 
-# INCRUCISAREA cromozomilor tocmai selectati
-
+# INCRUCISAREA si MUTATII pt prima generatie
 cromDeIncrucisat = []
 
-file.write(f"\nProbabilitatea de incrucisare: {data['probIncrucisare']}\n")
-for i in range(0, len(cromDeIncrucisat)):
+file.write(f"\nProbabilitatea de incrucisare {data['probIncrucisare']}\n")
+for i in range(0, len(cromSelectati)):
     individ = cromSelectati[i]
     u = everythingHelper.makeRandomNumber()
-    file.write(f"{i}: {''.join(individ.bits)} u = {u}")
+    file.write(f"{i + 1}: {''.join(individ.bits)} u={u}")
     if u < data["probIncrucisare"]: 
-        cromDeIncrucisat.append([individ, i]) # pastrez bitii individului si pozitia lui initiala
-        file.write(f" < {data['probIncrucisare']} participa")
-    file.write(f"\n")
+        cromDeIncrucisat.append([individ, i])
+        file.write(f"<{data['probIncrucisare']} participa")
+    file.write(f" \n")
 
-# debug print 
-#everythingHelper.printCromozomi(data, file)
-
+# detalii incrucisare pt prima generatie
 i = 0
 while i <  len(cromDeIncrucisat) - 1:
     pctRupere = int(random.uniform(1, data["nrBiti"] - 1))
-
     crom1 = cromDeIncrucisat[i][0]
     crom2 = cromDeIncrucisat[i + 1][0]
     pozitie1 = cromDeIncrucisat[i][1]
     pozitie2 = cromDeIncrucisat[i + 1][1]
     
-    file.write(f'Recombinarea dintre cromozomul {pozitie1 + 2} si {pozitie2 + 1}\n')
-    file.write(f'{''.join(crom1.bits)} {''.join(crom2.bits)} punct {pctRupere}\n')
-
+    file.write(f'Recombinare dintre cromozomul {pozitie1 + 1} cu cromozomul {pozitie2 + 1}:\n')
+    file.write(f'{''.join(crom1.bits)} {''.join(crom2.bits)} punct  {pctRupere}\n')
+    
     rez = incrucisare.incruciseaza(crom1, crom2, pctRupere)
     crom1.bits = rez[0]
     crom2.bits = rez[1]
-    file.write(f'Rezultat: {''.join(crom1.bits)} {''.join(crom2.bits)}\n')
-
-    # tb salvate schimbarile in cromSelectati
+    
+    # update value si fitness dupa incrucisare
+    crom1.update(data)
+    crom2.update(data)
+    
+    file.write(f'Rezultat    {''.join(crom1.bits)} {''.join(crom2.bits)}\n')
     cromSelectati[pozitie1] = crom1
     cromSelectati[pozitie2] = crom2
-
     i = i + 2
 
-file.write('\nDupa Recombinare:\n')
-everythingHelper.printCromozomi(cromSelectati, file)
+file.write('Dupa recombinare:\n')
+for i in range(0, len(cromSelectati)):
+    individ = cromSelectati[i]
+    file.write(f"  {i + 1:2}: {''.join(individ.bits)} x={individ.value:8.6f} f={individ.fitness}\n")
 
-
-# MUTATII 
-# pastrez intr-un dictionar ca sa nu printez indexul de mai multe ori: 
-# perechi de tipul: (cheie = index initial : cromozom.bits)
+# MUTATII detalii pt prima generatie
 dictCromCuMutatii = {}
-
-file.write(f'\nProbabilitatea de mutatie pentru fiecare gena: {data['probMutatie']}\n')
+file.write(f'\nProbabilitate de mutatie pentru fiecare gena {data['probMutatie']}\n')
 file.write('Au fost modificati cromozomii:\n')
 for i in range(0, len(cromSelectati)):
-    cromozom = cromSelectati[i].bits
-
-    for i in range(0, data['nrBiti']): 
+    for j in range(0, data['nrBiti']): 
         u = everythingHelper.makeRandomNumber()
         if u <= data["probMutatie"]:
             if i not in dictCromCuMutatii: 
                 file.write(f'{i + 1}\n')
+                dictCromCuMutatii[i] = cromSelectati[i]
+            cromSelectati[i].bits[j] = mutatii.mutate(cromSelectati[i].bits[j])
 
-            cromozom[i] = mutatii.mutate(cromozom[i])
-            dictCromCuMutatii[i] = cromozom
+# update fitness dupa mutatii
+for cheie in dictCromCuMutatii:
+    cromSelectati[cheie].update(data)
 
-# salvarea mutatiilor in lista de selectie             
+file.write('Dupa mutatie:\n')
+
+# add elita la sfarsit ca sa nu fie parte din restul operatiilor (trece direct la generatia viitoare)
+cromSelectati.append(elita)
+for i in range(0, len(cromSelectati)):
+    individ = cromSelectati[i]
+    file.write(f"  {i + 1:2}: {''.join(individ.bits)} x={individ.value:8.6f} f={individ.fitness}\n")
+
+# partea finala de fitness maxim si mediu
+
+file.write('\nEvolutia maximului \n')
+# pt prima generatie calc fitness maxim si mediu
+max_fitness = max([individ.fitness for individ in cromSelectati])
+avg_fitness = sum([individ.fitness for individ in cromSelectati]) / len(cromSelectati)
+file.write(f"{max_fitness}\n")
+
+# RESTUL GENERATIILOR
+for etapa in range(1, data["nrEtape"]):
+    # update date selectie
+    data["listaIndivizi"] = cromSelectati
     
-             
-# adaugare elita direct in generatia urmatoare (fara a trece prin selectie, incrucisare sau mutatie)
-cromSelectati.append(data["listaIndivizi"][posElita - 1])
+    a = data["coef"][0]
+    b = data["coef"][1]
+    c = data["coef"][2]
+    data["listaFitness"] = selectie.getListaFitnessIndividualServiciu(a, b, c, data["listaIndivizi"], data["nrCromozomi"])
+    data["fitnessTotal"] = selectie.findFitnessTotal(data["listaFitness"])
+    data["intervaleSiCumulare"] = selectie.detProbAndCumulate(data["listaFitness"], data["fitnessTotal"], data["nrCromozomi"])
+
+    posElita = everythingHelper.findPosEliteCromozome(data)
+    
+    cromSelectati = []
+    
+    # selectie
+    for i in range(0, data["nrCromozomi"] - 1):
+        u = everythingHelper.makeRandomNumber()
+        cromSelectat = everythingHelper.binarySearch(data, u)
+        cromSelectati.append(data["listaIndivizi"][cromSelectat - 1])
+    
+    # Salveaza elita pentru a o adauga doar la sfarsit
+    elita = data["listaIndivizi"][posElita - 1]
+    
+    # Aplica operatiile genetice (incrucisare si mutatie)
+    cromSelectati = everythingHelper.aplicaOperatiiGenetice(cromSelectati, data)
+    
+    # Adaugare elita la sfarsit (dupa toate operatiile genetice)
+    cromSelectati.append(elita)
+    
+    # Afisare fitness maxim si mediu
+    max_fitness = max([individ.fitness for individ in cromSelectati])
+    avg_fitness = sum([individ.fitness for individ in cromSelectati]) / len(cromSelectati)
+    file.write(f"{max_fitness}\n")
+
+file.close()
